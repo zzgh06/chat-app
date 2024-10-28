@@ -3,10 +3,12 @@ import { devtools, persist } from 'zustand/middleware';
 
 interface ChatStore {
   activeRoomId: string | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   messageMap: Record<string, any[]>;
   unreadCount: Record<string, number>;
   actions: {
     setActiveRoom: (roomId: string) => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     addMessage: (roomId: string, message: any) => void;
     setUnreadCount: (roomId: string, count: number) => void;
   };
@@ -20,7 +22,7 @@ export const useChatStore = create<ChatStore>()(
         messageMap: {},
         unreadCount: {},
         actions: {
-          setActiveRoom: (roomId) => 
+          setActiveRoom: (roomId) =>
             set({ activeRoomId: roomId }),
           addMessage: (roomId, message) =>
             set((state) => ({

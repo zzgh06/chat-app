@@ -46,6 +46,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  hashedPassword String?
   accounts      Account[]
   sessions      Session[]
   rooms         Room[]    @relation(fields: [roomIds], references: [id])
