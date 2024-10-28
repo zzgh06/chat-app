@@ -9,38 +9,37 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
   name          String?
   email         String?   @unique
   emailVerified DateTime?
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
   accounts      Account[]
   sessions      Session[]
   messages      Message[]
-  rooms         Room[]    @relation("RoomToUser")
-  ownedRooms    Room[]    @relation("RoomOwner")
+  rooms         Room[]    @relation(fields: [roomIds], references: [id])
+  roomIds       String[]  @db.ObjectId
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?  @db.Text
+  id_token          String? @db.String
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -49,64 +48,30 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(cuid())
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
   sessionToken String   @unique
-  userId       String
+  userId       String   @db.ObjectId
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Room {
-  id          String    @id @default(cuid())
-  name        String
-  type        RoomType  @default(GROUP)
-  ownerId     String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  owner       User      @relation("RoomOwner", fields: [ownerId], references: [id])
-  users       User[]    @relation("RoomToUser")
-  messages    Message[]
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  messages  Message[]
+  users     User[]    @relation(fields: [userIds], references: [id])
+  userIds   String[]  @db.ObjectId
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  content   String   @db.Text
-  type      MessageType @default(TEXT)
-  roomId    String
-  userId    String
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  roomId    String   @db.ObjectId
+  userId    String   @db.ObjectId
+  room      Room     @relation(fields: [roomId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  fileUrl   String?
-  fileName  String?
-  fileSize  Int?
-
-  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  readBy    ReadStatus[]
-}
-
-model ReadStatus {
-  id        String   @id @default(cuid())
-  messageId String
-  userId    String
-  readAt    DateTime @default(now())
-
-  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([messageId, userId])
-}
-
-enum RoomType {
-  DIRECT
-  GROUP
-}
-
-enum MessageType {
-  TEXT
-  IMAGE
-  FILE
 }
