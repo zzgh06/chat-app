@@ -1,7 +1,7 @@
-import { Inter } from 'next/font/google'
+import { Providers } from "@/lib/providers";
 import "./globals.css";
+import Header from "@/components/layout/Header";
 
-const inter = Inter({ subsets: ['latin'] })
 
 export default function RootLayout({
   children,
@@ -10,10 +10,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="kr">
-      <body className={inter.className}>
-        <main className="flex min-h-screen flex-col items-center justify-between p-24">
-          {children}
-        </main>
+      <body>
+        <Providers>
+          <Header />
+          <main className="container mx-auto px-4">{children}</main>
+        </Providers>
       </body>
     </html>
   );

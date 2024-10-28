@@ -14,64 +14,43 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  accounts      Account[]
-  sessions      Session[]
-  messages      Message[]
-  rooms         Room[]    @relation(fields: [roomIds], references: [id])
-  roomIds       String[]  @db.ObjectId
-}
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  email     String    @unique
+  name      String?
+  image     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-model Account {
-  id                String  @id @default(auto()) @map("_id") @db.ObjectId
-  userId            String  @db.ObjectId
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.String
-  access_token      String? @db.String
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.String
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  sessionToken String   @unique
-  userId       String   @db.ObjectId
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rooms     Room[]    @relation(fields: [roomIds], references: [id])
+  roomIds   String[]  @db.ObjectId
+  messages  Message[]
 }
 
 model Room {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  messages  Message[]
-  users     User[]    @relation(fields: [userIds], references: [id])
-  userIds   String[]  @db.ObjectId
+  name      String?
+  type      RoomType  @default(DIRECT)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  users     User[]    @relation(fields: [userIds], references: [id])
+  userIds   String[]  @db.ObjectId
+  messages  Message[]
 }
 
 model Message {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   content   String
-  roomId    String   @db.ObjectId
-  userId    String   @db.ObjectId
-  room      Room     @relation(fields: [roomId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  
+  roomId    String   @db.ObjectId
+  room      Room     @relation(fields: [roomId], references: [id])
+  
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum RoomType {
+  DIRECT
+  GROUP
 }
