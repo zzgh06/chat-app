@@ -8,18 +8,33 @@
 // commands please read more here:
 // https://on.cypress.io/custom-commands
 // ***********************************************
+
+declare global {
+  namespace Cypress {
+    interface Chainable {
+      login: (email?: string, password?: string) => void;
+      logout: () => void;
+    }
+  }
+}
+
 //
 //
 // -- This is a parent command --
-Cypress.Commands.add('login', (email: string, password: string) => {
-  cy.visit('/login')
-  cy.get('[data-cy=email]').type(email)
-  cy.get('[data-cy=password]').type(password)
-  cy.get('[data-cy=login-submit-button]').click()
-  
-  cy.url().should('not.include', '/login')
-})
+Cypress.Commands.add('login', (email = 'test@example.com', password = 'password') => {
+  cy.session([email, password], () => {
+    cy.visit('/sign-in');
+    cy.get('[data-testid=email-input]').type(email);
+    cy.get('[data-testid=password-input]').type(password);
+    cy.get('[data-testid=submit-button]').click();
+    cy.url().should('not.include', '/sign-in');
+  });
+});
 
+Cypress.Commands.add('logout', () => {
+  cy.get('[data-testid=user-menu-button]').click();
+  cy.get('[data-testid=sign-out-button]').click();
+});
 //
 //
 // -- This is a child command --
@@ -34,6 +49,4 @@ Cypress.Commands.add('login', (email: string, password: string) => {
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 //
 
-Cypress.Commands.add('dataCy', (value: string) => {
-  return cy.get(`[data-cy=${value}]`)
-})
+export {};

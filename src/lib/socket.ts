@@ -1,80 +1,79 @@
-import { io, Socket } from 'socket.io-client'
-import { Message } from '@prisma/client'
+import { Message } from '@/types/room';
+import { useEffect, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
 
 interface ServerToClientEvents {
   'message:new': (message: Message) => void;
-  'message:update': (message: Message) => void;
-  'message:delete': (messageId: string) => void;
+  'user:status': (update: { userId: string; status: 'online' | 'offline' }) => void;
+  connect: () => void;
+  disconnect: () => void;
+  'connect_error': (error: Error) => void;
+  'reconnect_attempt': (attemptNumber: number) => void;
 }
 
 interface ClientToServerEvents {
-  'join-room': (roomId: string) => void;
-  'leave-room': (roomId: string) => void;
-  'message:send': (message: Partial<Message>) => void;
+  'room:join': (roomId: string) => void;
+  'room:leave': (roomId: string) => void;
+  'message:read': (messageId: string) => void;
 }
 
-class SocketClient {
-  private static instance: SocketClient;
-  private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
-
-  private constructor() {}
-
-  static getInstance(): SocketClient {
-    if (!SocketClient.instance) {
-      SocketClient.instance = new SocketClient();
-    }
-    return SocketClient.instance;
+// 소켓 인스턴스 생성
+export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
+  process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001', 
+  {
+    autoConnect: false,
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5,
   }
+);
 
-  connect() {
-    if (!this.socket) {
-      this.socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4000', {
-        transports: ['websocket'],
-        autoConnect: true,
-      });
-
-      this.setupEventListeners();
-    }
-    return this.socket;
+// 소켓 연결 함수
+export const connectSocket = (userId: string) => {
+  if (!socket.connected) {
+    socket.auth = { userId };
+    socket.connect();
   }
+};
 
-  private setupEventListeners() {
-    if (!this.socket) return;
-
-    this.socket.on('connect', () => {
-      console.log('Connected to socket server');
-    });
-
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from socket server');
-    });
-
-    this.socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
-    });
+// 소켓 연결 해제 함수
+export const disconnectSocket = () => {
+  if (socket.connected) {
+    socket.disconnect();
   }
+};
 
-  joinRoom(roomId: string) {
-    this.socket?.emit('join-room', roomId);
-  }
+// 에러 핸들링
+socket.on('connect_error', (error) => {
+  console.error('Socket connection error:', error);
+});
 
-  leaveRoom(roomId: string) {
-    this.socket?.emit('leave-room', roomId);
-  }
+// 재연결 시도 로깅
+socket.on('reconnect_attempt', (attemptNumber) => {
+  console.log(`Socket reconnection attempt #${attemptNumber}`);
+});
 
-  disconnect() {
-    if (this.socket) {
-      this.socket.disconnect();
-      this.socket = null;
-    }
-  }
+// 소켓 상태 관리를 위한 커스텀 훅
+export const useSocket = () => {
+  const [isConnected, setIsConnected] = useState(socket.connected);
 
-  getSocket() {
-    if (!this.socket) {
-      this.connect();
-    }
-    return this.socket;
-  }
-}
+  useEffect(() => {
+    const onConnect = () => setIsConnected(true);
+    const onDisconnect = () => setIsConnected(false);
 
-export const socketClient = SocketClient.getInstance();
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+
+    return () => {
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+    };
+  }, []);
+
+  return {
+    socket,
+    isConnected,
+    connect: connectSocket,
+    disconnect: disconnectSocket,
+  };
+};

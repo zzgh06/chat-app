@@ -1,10 +1,4 @@
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  image?: string;
-  status: 'online' | 'offline';
-}
+import { User } from "@/types";
 
 export const fetchUser = async (userId: string): Promise<User> => {
   const response = await fetch(`/api/users/${userId}`);
