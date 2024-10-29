@@ -47,23 +47,29 @@ export const authOptions: AuthOptions = {
     })
   ],
   pages: {
-    signIn: '/auth/signin',
-  },
-  callbacks: {
-    session: async ({ session, token }) => {
-      if (session?.user) {
-        session.user.id = token.sub!;
-      }
-      return session;
-    },
-    jwt: async ({ user, token }) => {
-      if (user) {
-        token.sub = user.id;
-      }
-      return token;
-    }
+    signIn: '/sign-in',
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, 
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+  callbacks: {
+    async jwt({ token, user, account }) {
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+      }
+      if (account) {
+        token.accessToken = account.access_token;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
   },
 };

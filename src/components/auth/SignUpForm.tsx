@@ -1,6 +1,6 @@
 'use client';
 
-import { signIn } from "next-auth/react";
+import { useSignUp } from "@/hooks/useSignUp";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
@@ -17,9 +17,8 @@ export default function SignUpForm() {
     password: '',
   });
   const [errors, setErrors] = useState<Partial<FormData>>({});
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { signUp, error, isLoading } = useSignUp();
 
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {};
@@ -50,40 +49,10 @@ export default function SignUpForm() {
     if (!validateForm()) return;
 
     try {
-      setIsLoading(true);
-      setError('');
-
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Something went wrong');
-      }
-
-      const result = await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        throw new Error('Failed to sign in');
-      }
-
-      router.push('/');
-      router.refresh();
+      await signUp(formData);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Something went wrong');
-    } finally {
-      setIsLoading(false);
-    }
+      console.error('SignUp Error:', error);    
+    } 
   };
 
   return (
