@@ -108,7 +108,7 @@ export const SignInForm = () => {
             className={`w-full px-3 py-2 border rounded-md outline-none focus:ring-2 ${
               errors.email ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Enter your email"
+            placeholder="이메일을 입력해주세요"
             disabled={isLoading}
             data-testid="email-input"
           />
@@ -134,7 +134,7 @@ export const SignInForm = () => {
             className={`w-full px-3 py-2 border rounded-md outline-none focus:ring-2 ${
               errors.password ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Enter your password"
+            placeholder="패스워드를 입력해주세요"
             disabled={isLoading}
             data-testid="password-input"
           />
@@ -181,7 +181,7 @@ export const SignInForm = () => {
         </span>
         <button
           type="button"
-          onClick={() => router.push('/auth/signup')}
+          onClick={() => router.push('/sign-up')}
           className="text-sm text-blue-600 hover:underline"
         >
           회원가입
