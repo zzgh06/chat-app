@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchRooms } from '@/lib/api/rooms';
+import { fetchRooms } from '@/lib/api/fetchRooms';
 import type { Message, Room } from '@/types/room';
 
 export const useRooms = () => {

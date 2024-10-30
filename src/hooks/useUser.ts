@@ -1,4 +1,4 @@
-import { fetchUser } from "@/lib/api/users";
+import { fetchUser } from "@/lib/api/fetchUser";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useUser = (userId: string) => {
